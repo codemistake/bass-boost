@@ -1,13 +1,13 @@
 # bass-boost
 
-An [Agent Skill](https://agentskills.io) that teaches a coding agent when to
-hand work to a different model through [OpenRouter](https://openrouter.ai), and
-when not to.
+An [Agent Skill](https://agentskills.io) that gives a coding agent the senses it
+does not have, and teaches it when to use them.
 
-Your main model is the tweeter. It is precise, expensive, and it makes the
-decisions. The models behind OpenRouter are the subwoofer: cheap watts for the
-heavy low end. This skill routes the low end away from the tweeter, and keeps
-every decision on it.
+Your coding agent is a tweeter. It is precise, expensive, and it makes the
+decisions, but it cannot reach the low end on its own: it does not hear audio,
+does not watch video, cannot draw, and pays its own premium rate to read
+anything long. This skill wires up a subwoofer. Outside models supply the cheap
+watts, and every decision stays on the tweeter.
 
 ## What it adds
 
@@ -17,6 +17,7 @@ every decision on it.
 | **video** | a screen recording of a bug has to be understood |
 | **audio** | a voice note or a call recording has to become text |
 | **opinion** | a non-code decision needs a reader with different blind spots |
+| **image** | a placeholder, icon, texture, or shipped asset has to be drawn |
 | **economy** | subscription limits are running out and heavy reading has to move |
 
 Nothing here writes to your repository. The outside model reads, the main model
@@ -65,6 +66,23 @@ because the standard library cannot. Trimming an oversized recording or
 re-encoding an unsupported container needs `ffmpeg` on the machine. The script
 prints the exact command when a file is too large.
 
+For the cheap image route, export a fal.ai key from
+<https://fal.ai/dashboard/keys> as well:
+
+```bash
+export FAL_AI_TOKEN=...
+```
+
+```bash
+python scripts/gen-image.py "a red vinyl record on white" --out cover.png
+python scripts/gen-image.py "shop background" --route quality --out bg.png
+```
+
+`draft` is the default and runs on fal.ai: about a second, a small fraction of a
+cent, good enough to stop shipping grey boxes. `quality` runs on OpenRouter,
+defaulting to Nano Banana 2, with GPT Image 2 available for images whose text
+has to render correctly. Iterate on the draft route, spend on the last one.
+
 ## Cost and privacy
 
 Read this before installing.
@@ -86,7 +104,7 @@ Read this before installing.
 
 ## Why not just use the main model
 
-Four things a top-tier coding model cannot do for you, in rough order of how
+Five things a top-tier coding model cannot do for you, in rough order of how
 often they come up:
 
 1. **Reach.** Some pages the built-in fetch tool cannot read, and some answers
@@ -94,10 +112,14 @@ often they come up:
 2. **Ears and eyes.** Most coding models take text, images, and PDFs. They do
    not take audio or video. A thirty-second screen recording of a bug is often
    the fastest bug report there is.
-3. **A second set of blind spots.** Asking one model to check its own
+3. **Hands for drawing.** A coding model writes the markup for a card and then
+   leaves a grey box where the picture goes. A draft image costs a fraction of
+   a cent and arrives in about a second, so the placeholder can be the real
+   thing from the first commit.
+4. **A second set of blind spots.** Asking one model to check its own
    architecture proposal gets you the same reasoning twice. A model from another
    lab fails differently.
-4. **Somebody else's meter.** When the subscription runs low, bulk reading can
+5. **Somebody else's meter.** When the subscription runs low, bulk reading can
    move to a per-token account and the session keeps going.
 
 ## Troubleshooting
@@ -127,7 +149,8 @@ formats varies. `wav` and `mp3` are the safe ones. Re-encode with
 bass-boost/
 ├── SKILL.md              # the skill itself
 ├── scripts/
-│   └── or-send.py        # any local file to a cheap model, stdlib only
+│   ├── or-send.py        # any local file to a cheap model, stdlib only
+│   └── gen-image.py      # raster images, draft or quality route
 ├── CHANGELOG.md
 └── LICENSE
 ```

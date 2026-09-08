@@ -1,8 +1,8 @@
 ---
 name: bass-boost
-description: "Use when the main model should hand work to a different model through OpenRouter: a page or search the built-in web tools cannot read, a video or screen recording that needs analyzing, an audio file or voice note that needs transcribing, an independent second opinion on a non-code decision, or when the user says their subscription limits are running low and wants heavy reading moved off the main model. Also use when the user asks which outside model to pick for a task or what a call would cost."
+description: "Use when a task needs something the coding agent cannot do by itself and an outside model can: generate or replace a raster image, placeholder, icon, or texture; analyze a video or screen recording; transcribe audio or a voice note; research a page or topic the built-in web tools cannot reach; get an independent second opinion on a non-code decision; or move heavy reading onto a cheaper model when the user says their subscription limits are running low. Also use when the user asks which outside model to pick for a task, or what a call would cost."
 license: MIT
-compatibility: "Requires an OpenRouter account with credit, and either the OpenRouter MCP server or OPENROUTER_API_KEY in the environment. Python 3.9+ and shell access for local media, plus ffmpeg to trim or shrink it. Economy mode assumes a token-metered subscription host such as Claude Code."
+compatibility: "Needs Python 3.9+, shell access, and an OpenRouter account reached via its MCP server or OPENROUTER_API_KEY. FAL_AI_TOKEN adds the cheap image route; ffmpeg trims oversized media. Economy mode assumes a token-metered host such as Claude Code."
 metadata:
   version: "1.0.0"
   author: codemistake
@@ -11,10 +11,11 @@ metadata:
 
 # Bass Boost
 
-The main model is the tweeter. It is precise, expensive, and it makes the
-decisions. The models behind OpenRouter are the subwoofer: cheap watts for the
-heavy low end, which is bulk reading, media, and long-horizon research. This
-skill moves the low end off the tweeter.
+A coding agent is a tweeter. It is precise, expensive, and it makes the
+decisions, but it cannot reach the low end on its own: it does not hear audio,
+does not watch video, cannot draw, and pays its own premium rate to read
+anything long. This skill wires up a subwoofer for it. Outside models supply the
+cheap watts, and every decision stays on the tweeter.
 
 **The main model decides and writes. Every time.** Nothing that comes back from
 OpenRouter edits a file, runs a command, or gets believed without a check. A
@@ -45,7 +46,9 @@ it. Delegating a local file needs `OPENROUTER_API_KEY` and
 answer.
 
 Ask the user to create a key at <https://openrouter.ai/keys> and export it.
-Never ask to see the key and never write it into a file.
+The draft image route uses a separate one, `FAL_AI_TOKEN`, from
+<https://fal.ai/dashboard/keys>. Never ask to see either key, and never write
+one into a file.
 
 ## Modes
 
@@ -55,6 +58,7 @@ Never ask to see the key and never write it into a file.
 | video | a screen recording or clip has to be understood | `scripts/or-send.py` |
 | audio | speech has to become text | `transcribe-audio`, or `scripts/or-send.py` |
 | opinion | a non-code decision needs a dissenting reader | `send-message`, a model from another lab |
+| image | a raster image, icon, texture, or placeholder is needed | `scripts/gen-image.py` |
 | economy | the user's subscription limits are running out | see below |
 
 Model slugs move. Before pinning one in a new workflow, confirm it with
@@ -120,6 +124,33 @@ is a list of things to check, and the checking still happens locally.
 
 Use it for architecture, product, and wording calls. For code review, the host's
 own review tooling sees the actual diff and does better.
+
+### image
+
+```bash
+python scripts/gen-image.py "prompt" --out assets/icons/sword.png
+python scripts/gen-image.py "prompt" --route quality --out assets/hero.png
+```
+
+Two routes, and the default is the cheap one on purpose.
+
+`draft` runs fal.ai z-image/turbo, needs `FAL_AI_TOKEN`, and returns in about a
+second for a small fraction of a cent. Placeholders, layout stand-ins, and
+figuring out what the prompt should say all belong here. Iterate on the draft
+route until the wording is right.
+
+`quality` runs OpenRouter and needs `OPENROUTER_API_KEY`. The default is
+`google/gemini-3.1-flash-image`, and `openai/gpt-image-2` is the alternative
+when text inside the image has to render correctly. Ask the user which one, or
+say which you picked and why. Use it once, at the end, on the prompt the draft
+route settled.
+
+Wire the result into the code and show it to the user. Never invent a filename
+that something already references, and never overwrite an existing asset without
+being asked: the script refuses to write over a file that exists.
+
+An image is not a decision. Getting a logo, a brand asset, or anything a person
+will read as authentic is the user's call, not a step to complete quietly.
 
 ### economy
 
