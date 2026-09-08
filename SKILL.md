@@ -2,7 +2,7 @@
 name: bass-boost
 description: "Use when a task needs something the coding agent cannot do by itself and an outside model can: generate or replace a raster image, placeholder, icon, or texture; analyze a video or screen recording; transcribe audio or a voice note; research a page or topic the built-in web tools cannot reach; get an independent second opinion on a non-code decision; or move heavy reading onto a cheaper model when the user says their subscription limits are running low. Also use when the user asks which outside model to pick for a task, or what a call would cost."
 license: MIT
-compatibility: "Needs Python 3.9+, shell access, and an OpenRouter account reached via its MCP server or OPENROUTER_API_KEY. FAL_AI_TOKEN adds the cheap image route; ffmpeg trims oversized media. Economy mode assumes a token-metered host such as Claude Code."
+compatibility: "Needs Python 3.9+, shell access, and an OpenRouter account reached via its MCP server or OPENROUTER_API_KEY. Optional: FAL_AI_TOKEN for cheap draft images, FIRECRAWL_API_KEY for blocked pages, ffmpeg to trim oversized media. Economy mode assumes a token-metered host such as Claude Code."
 metadata:
   version: "1.1.0"
   author: codemistake
@@ -45,16 +45,20 @@ it. Delegating a local file needs `OPENROUTER_API_KEY` and
 `scripts/or-send.py`, which reads the file in a shell and returns only the
 answer.
 
-Ask the user to create a key at <https://openrouter.ai/keys> and export it.
-The draft image route uses a separate one, `FAL_AI_TOKEN`, from
-<https://fal.ai/dashboard/keys>. Never ask to see either key, and never write
-one into a file.
+Ask the user to create a key at <https://openrouter.ai/keys> and export it. Two
+other keys are optional and each unlocks one route: `FAL_AI_TOKEN` from
+<https://fal.ai/dashboard/keys> for cheap draft images, and `FIRECRAWL_API_KEY`
+from <https://www.firecrawl.dev/app/api-keys> for pages the host's fetch tool
+cannot read. Never ask to see a key, and never write one into a file.
+
+When a route's key is missing, say the route is unavailable. Do not
+substitute a guess for what it would have returned.
 
 ## Modes
 
 | Mode | Reach for it when | How |
 |---|---|---|
-| research | built-in fetch is blocked, or the answer needs several pages | `send-message`, a `:online` model |
+| research | built-in fetch is blocked, or the answer needs several pages | `send-message` with `:online`, or `scripts/fetch-url.py` |
 | video | a screen recording or clip has to be understood | `scripts/or-send.py` |
 | audio | speech has to become text | `transcribe-audio`, or `scripts/or-send.py` |
 | opinion | a non-code decision needs a dissenting reader | `send-message`, a model from another lab |
@@ -79,6 +83,18 @@ still paraphrases, and the paraphrase is what gets a fact wrong.
 
 `:online` searches. It will not open a URL named in the message, so this mode
 answers questions, it does not read a page on request.
+
+Reading a **named** page is the other half, and it goes in this order:
+
+1. The host's own fetch tool. Free, and it handles most pages.
+2. `python scripts/fetch-url.py URL`, when the first one returns a block page,
+   an empty body, or a wall of HTML. Firecrawl requests from its own
+   infrastructure and renders JavaScript, so a Cloudflare block or an IP
+   rate-limit on this machine does not apply to it. Needs `FIRECRAWL_API_KEY`;
+   without one, say the page is unreachable rather than guessing its contents.
+
+Add `--out FILE` for a long page and read the file, so the whole thing does not
+land in this context at once.
 
 ### video
 

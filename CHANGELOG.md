@@ -13,6 +13,12 @@ All notable changes to this skill are documented here. The format follows
   OpenRouter with Nano Banana 2 or GPT Image 2. The script refuses to overwrite
   an existing file and verifies the bytes are PNG or JPEG before writing.
 
+- `scripts/fetch-url.py`, a Firecrawl fallback for reading a named page the
+  host's own fetch tool cannot get: Cloudflare blocks, IP rate-limits, and
+  JavaScript-rendered content. Free tier covers 1000 pages a month, so an
+  occasional fallback costs nothing. Optional; the skill states a page is
+  unreachable rather than guessing when the key is absent.
+
 ### Changed
 
 - Reframed from "delegate heavy work" to "capabilities the coding agent lacks".

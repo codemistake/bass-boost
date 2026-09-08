@@ -83,6 +83,19 @@ cent, good enough to stop shipping grey boxes. `quality` runs on OpenRouter,
 defaulting to Nano Banana 2, with GPT Image 2 available for images whose text
 has to render correctly. Iterate on the draft route, spend on the last one.
 
+For pages your agent's own fetch tool cannot read, a Firecrawl key is the third
+optional extra. The free plan is 1000 pages a month with no card, and one page
+costs one credit, so an occasional fallback never leaves it:
+
+```bash
+export FIRECRAWL_API_KEY=fc-...
+python scripts/fetch-url.py https://example.com/docs --out docs.md
+```
+
+Firecrawl requests from its own infrastructure and renders JavaScript, so a
+Cloudflare block or an IP rate-limit on your machine does not apply to it. Try
+the built-in tool first; this is the fallback, not the default.
+
 ## Cost and privacy
 
 Read this before installing.
@@ -150,7 +163,8 @@ bass-boost/
 ├── SKILL.md              # the skill itself
 ├── scripts/
 │   ├── or-send.py        # any local file to a cheap model, stdlib only
-│   └── gen-image.py      # raster images, draft or quality route
+│   ├── gen-image.py      # raster images, draft or quality route
+│   └── fetch-url.py      # one page as markdown, via Firecrawl
 ├── CHANGELOG.md
 └── LICENSE
 ```
