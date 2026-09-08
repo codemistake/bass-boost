@@ -36,18 +36,24 @@ claude mcp login openrouter
 That gives the tools `send-message`, `transcribe-audio`, `list-models`,
 `get-model`, and `get-generation`.
 
-Local files need a key instead, because base64 through a tool call burns the
-main model's context. Ask the user to create one at
-<https://openrouter.ai/keys> and export `OPENROUTER_API_KEY`. Never ask for the
-key itself and never write it into a file.
+**The MCP server alone cannot relieve context.** Its `send-message` takes a
+string, so putting a local file in the request means reading that file first.
+The saving is gone before the call is made, and no URL trick avoids it: the
+`:online` plugin runs a web search, it does not fetch a path or a link you hand
+it. Delegating a local file needs `OPENROUTER_API_KEY` and
+`scripts/or-send.py`, which reads the file in a shell and returns only the
+answer.
+
+Ask the user to create a key at <https://openrouter.ai/keys> and export it.
+Never ask to see the key and never write it into a file.
 
 ## Modes
 
 | Mode | Reach for it when | How |
 |---|---|---|
 | research | built-in fetch is blocked, or the answer needs several pages | `send-message`, a `:online` model |
-| video | a screen recording or clip has to be understood | `scripts/or-media.py video` |
-| audio | speech has to become text | `transcribe-audio`, or `scripts/or-media.py audio` |
+| video | a screen recording or clip has to be understood | `scripts/or-send.py` |
+| audio | speech has to become text | `transcribe-audio`, or `scripts/or-send.py` |
 | opinion | a non-code decision needs a dissenting reader | `send-message`, a model from another lab |
 | economy | the user's subscription limits are running out | see below |
 
@@ -67,15 +73,18 @@ Ask for facts with source links, dates, and version numbers, and say no prose.
 Then re-read the important links with the local fetch tool. A grounded model
 still paraphrases, and the paraphrase is what gets a fact wrong.
 
+`:online` searches. It will not open a URL named in the message, so this mode
+answers questions, it does not read a page on request.
+
 ### video
 
 ```bash
-python scripts/or-media.py video FILE --prompt "what to look for"
+python scripts/or-send.py FILE --ask "what to look for"
 ```
 
-Name the target in the prompt: the moment of failure, the exact on-screen text,
-the order the user clicked things. Files above about 20 MB are rejected, and the
-script prints the `ffmpeg` command that shrinks one.
+Name the target in the question: the moment of failure, the exact on-screen
+text, the order the user clicked things. Files above about 20 MB are rejected,
+and the script prints the `ffmpeg` command that shrinks one.
 
 ### audio
 
@@ -83,7 +92,7 @@ A file already on public HTTPS goes through `transcribe-audio` with an
 `audio_url`. A local file goes through the script:
 
 ```bash
-python scripts/or-media.py audio FILE --lang ru
+python scripts/or-send.py FILE --lang ru
 ```
 
 `nvidia/parakeet-tdt-0.6b-v3` is a cheap multilingual default. Never pass
@@ -124,9 +133,10 @@ While it is on, take the cheapest step that answers the question, in this order:
    deploy has an `ERROR` line in the log. One regex beats any delegation.
 2. **Delegate what narrowing cannot reach.** Send material out only when the
    question is about meaning rather than a string: what a long document argues,
-   whether a report contradicts itself, what an unfamiliar module does. Use a
-   cheap flash-tier model, `reasoning_effort: low`, `max_tokens: 3000`, and one
-   specific question. Keep the answer, drop the source text.
+   whether a report contradicts itself, what an unfamiliar module does. Send a
+   local file with `scripts/or-send.py FILE --ask "..."`, which is the only
+   route that keeps the file out of this context. Without the key, this step
+   is unavailable; say so and go to step 3 instead of pretending to save.
 3. **Read directly** whatever survives both steps. It should be small.
 
 Also while it is on:

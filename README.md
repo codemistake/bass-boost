@@ -37,19 +37,30 @@ claude mcp add --transport http openrouter https://mcp.openrouter.ai/mcp
 claude mcp login openrouter
 ```
 
-For local audio and video files, also export an API key from
+To delegate anything held in a local file, also export an API key from
 <https://openrouter.ai/keys>:
 
 ```bash
 export OPENROUTER_API_KEY=sk-or-...
 ```
 
-The key is needed because base64-encoded media sent through an MCP tool call
-would pass through the main model's context window. `scripts/or-media.py` keeps
-it out. The script is standard library only, Python 3.9 or newer, no
-`pip install`.
+The key is not optional if you want the economy mode to do anything. The MCP
+server's `send-message` takes a string, so handing it a local file means reading
+that file into the agent's context first, which is the cost you were trying to
+avoid. No URL trick gets around it either: the `:online` suffix runs a web
+search, it does not fetch a link you hand it.
 
-The script uploads a file as it is. It does not decode, resample, or compress,
+`scripts/or-send.py` is the way out. It reads the file in a shell, sends it, and
+prints only the answer. Standard library only, Python 3.9 or newer, no
+`pip install`. It routes by extension:
+
+```bash
+python scripts/or-send.py deploy.log  --ask "what failed and why"
+python scripts/or-send.py bug.mp4     --ask "where does the UI break"
+python scripts/or-send.py voicenote.m4a --lang ru
+```
+
+The script sends a file as it is. It does not decode, resample, or compress,
 because the standard library cannot. Trimming an oversized recording or
 re-encoding an unsupported container needs `ffmpeg` on the machine. The script
 prints the exact command when a file is too large.
@@ -96,7 +107,15 @@ by IP, and a burst of calls from one session can trip it for several minutes.
 Wait it out. Do not retry in a loop, which extends the block.
 
 **`OPENROUTER_API_KEY is not set`.** The MCP server's login is separate from the
-API key. `scripts/or-media.py` uses the key, not the MCP session.
+API key. `scripts/or-send.py` uses the key, not the MCP session.
+
+**A 404 from a provider that clearly exists.** OpenRouter's account privacy
+settings gate which providers may serve your requests, and a model whose only
+provider is disallowed fails as a 404 rather than as a permission error. Check
+the provider list in your OpenRouter settings before assuming the slug is wrong.
+
+**The model says it cannot open your link.** Expected. `:online` searches the
+web; it does not fetch a URL from the message. Send the content instead.
 
 **The transcription endpoint rejects your file.** Provider support for container
 formats varies. `wav` and `mp3` are the safe ones. Re-encode with
@@ -108,7 +127,7 @@ formats varies. `wav` and `mp3` are the safe ones. Re-encode with
 bass-boost/
 ├── SKILL.md              # the skill itself
 ├── scripts/
-│   └── or-media.py       # local audio and video, stdlib only
+│   └── or-send.py        # any local file to a cheap model, stdlib only
 ├── CHANGELOG.md
 └── LICENSE
 ```

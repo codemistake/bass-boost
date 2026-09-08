@@ -11,8 +11,11 @@ First public release.
 ### Added
 
 - Five delegation modes: `research`, `video`, `audio`, `opinion`, `economy`.
-- `scripts/or-media.py`, standard library only, for local audio and video.
-  Keeps base64 payloads out of the main model's context window.
+- `scripts/or-send.py`, standard library only. Sends any local file, text or
+  media, to a model and returns only the answer. This is the only route that
+  keeps a delegated file out of the calling agent's context, because the MCP
+  server's `send-message` takes a string and therefore requires reading the
+  file first.
 - Cost and privacy section, stating that calls are billed to the user's own
   OpenRouter balance and that delegated content reaches a third-party provider.
 - Common mistakes table covering the failure modes seen while building the
