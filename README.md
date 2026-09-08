@@ -49,6 +49,11 @@ would pass through the main model's context window. `scripts/or-media.py` keeps
 it out. The script is standard library only, Python 3.9 or newer, no
 `pip install`.
 
+The script uploads a file as it is. It does not decode, resample, or compress,
+because the standard library cannot. Trimming an oversized recording or
+re-encoding an unsupported container needs `ffmpeg` on the machine. The script
+prints the exact command when a file is too large.
+
 ## Cost and privacy
 
 Read this before installing.

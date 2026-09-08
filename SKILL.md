@@ -2,7 +2,7 @@
 name: bass-boost
 description: "Use when the main model should hand work to a different model through OpenRouter: a page or search the built-in web tools cannot read, a video or screen recording that needs analyzing, an audio file or voice note that needs transcribing, an independent second opinion on a non-code decision, or when the user says their subscription limits are running low and wants heavy reading moved off the main model. Also use when the user asks which outside model to pick for a task or what a call would cost."
 license: MIT
-compatibility: "Requires an OpenRouter account with credit, and either the OpenRouter MCP server or OPENROUTER_API_KEY in the environment. Economy mode assumes a subscription-metered host such as Claude Code."
+compatibility: "Requires an OpenRouter account with credit, and either the OpenRouter MCP server or OPENROUTER_API_KEY in the environment. Python 3.9+ and shell access for local media, plus ffmpeg to trim or shrink it. Economy mode assumes a token-metered subscription host such as Claude Code."
 metadata:
   version: "1.0.0"
   author: codemistake
@@ -90,8 +90,9 @@ python scripts/or-media.py audio FILE --lang ru
 `audio_base64` to the MCP tool; the encoded audio would pass through the main
 model's context.
 
-The transcript is raw text with no structure. Reading the task out of it is the
-main model's job.
+The endpoint returns one flat string. There are no timestamps and no speaker
+labels, so a recording with several speakers comes back as a single run of text.
+Reading the task out of it is the main model's job.
 
 ### opinion
 
@@ -103,6 +104,10 @@ outsider beats picking the most expensive one.
 Send a brief, not a repository: context in five to fifteen lines, the options,
 and the question. Ask it to argue against the plan and to name what would have
 to be true for the plan to fail.
+
+An outside model is not independent evidence. Two models trained on overlapping
+data repeat each other's mistakes, so agreement proves nothing. What comes back
+is a list of things to check, and the checking still happens locally.
 
 Use it for architecture, product, and wording calls. For code review, the host's
 own review tooling sees the actual diff and does better.
@@ -125,6 +130,10 @@ While it is on:
 
 What does not change in economy mode: verify before acting, ask before anything
 destructive, and never let an outside model write to the repository.
+
+This trades one bill for another, and it only helps where the host meters
+tokens. On a host that meters turns or requests, delegating adds a round trip
+and saves nothing. Say so rather than promising a saving you cannot measure.
 
 ## Cost and privacy
 
