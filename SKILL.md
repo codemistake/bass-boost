@@ -117,11 +117,20 @@ own review tooling sees the actual diff and does better.
 Turn on when the user says they are low on limits, or asks for economy mode.
 Confirm in one line, then hold it until they say stop or the session ends.
 
-While it is on:
+While it is on, take the cheapest step that answers the question, in this order:
 
-- Files over roughly 300 lines, logs, and long diffs are not read directly.
-  Send them to a cheap flash-tier model with a specific question,
-  `reasoning_effort: low`, `max_tokens: 3000`, and keep the summary.
+1. **Narrow locally.** `grep`, `sed`, `wc`, `head`. This costs nothing, leaks
+   nothing, and ends the job on anything with a searchable signature. A failed
+   deploy has an `ERROR` line in the log. One regex beats any delegation.
+2. **Delegate what narrowing cannot reach.** Send material out only when the
+   question is about meaning rather than a string: what a long document argues,
+   whether a report contradicts itself, what an unfamiliar module does. Use a
+   cheap flash-tier model, `reasoning_effort: low`, `max_tokens: 3000`, and one
+   specific question. Keep the answer, drop the source text.
+3. **Read directly** whatever survives both steps. It should be small.
+
+Also while it is on:
+
 - Long first drafts, such as a README or a report, are drafted outside and
   edited by the main model.
 - Subagents stay off. They bill the same subscription that is running out.
@@ -151,6 +160,7 @@ cost.
 | Mistake | What to do instead |
 |---|---|
 | Delegating a task the main model would finish faster | Delegate for reach, context relief, or an outside view. Nothing else. |
+| Delegating a file that one `grep` would narrow | Search locally first. A regex costs nothing and keeps the file on the machine. Delegation does neither. |
 | Pasting a whole file into an opinion call | Send a brief. Frontier models are billed per token in both directions. |
 | Treating a grounded answer as verified | Follow the links. Grounding narrows hallucination, it does not remove it. |
 | Pinning a model slug found in a blog post | Confirm it with `get-model` first. Slugs are retired without notice. |
