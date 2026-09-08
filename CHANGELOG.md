@@ -4,6 +4,21 @@ All notable changes to this skill are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-09-09
+
+### Added
+
+- `image` mode and `scripts/gen-image.py`. Two routes: `draft` on fal.ai
+  z-image/turbo, about a second and a fraction of a cent, and `quality` on
+  OpenRouter with Nano Banana 2 or GPT Image 2. The script refuses to overwrite
+  an existing file and verifies the bytes are PNG or JPEG before writing.
+
+### Changed
+
+- Reframed from "delegate heavy work" to "capabilities the coding agent lacks".
+  Hearing, watching, drawing, reach, and an outside view are things it cannot do
+  at all; the economy mode is the only one that is purely about cost.
+
 ## [1.0.0] - 2026-09-08
 
 First public release.
@@ -27,18 +42,3 @@ First public release.
 - Model slugs are not pinned to dated versions where a `~vendor/family-latest`
   alias exists, because dated slugs are retired without notice.
 - No prices appear in `SKILL.md`. They change faster than releases do.
-
-## [1.1.0] - 2026-09-09
-
-### Added
-
-- `image` mode and `scripts/gen-image.py`. Two routes: `draft` on fal.ai
-  z-image/turbo, about a second and a fraction of a cent, and `quality` on
-  OpenRouter with Nano Banana 2 or GPT Image 2. The script refuses to overwrite
-  an existing file and verifies the bytes are PNG or JPEG before writing.
-
-### Changed
-
-- Reframed from "delegate heavy work" to "capabilities the coding agent lacks".
-  Hearing, watching, drawing, reach, and an outside view are things it cannot do
-  at all; the economy mode is the only one that is purely about cost.

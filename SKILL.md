@@ -4,7 +4,7 @@ description: "Use when a task needs something the coding agent cannot do by itse
 license: MIT
 compatibility: "Needs Python 3.9+, shell access, and an OpenRouter account reached via its MCP server or OPENROUTER_API_KEY. FAL_AI_TOKEN adds the cheap image route; ffmpeg trims oversized media. Economy mode assumes a token-metered host such as Claude Code."
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: codemistake
   repository: https://github.com/codemistake/bass-boost
 ---
