@@ -38,12 +38,21 @@ claude mcp add --transport http openrouter https://mcp.openrouter.ai/mcp
 claude mcp login openrouter
 ```
 
-To delegate anything held in a local file, also export an API key from
+To delegate anything held in a local file, also add an API key from
 <https://openrouter.ai/keys>:
 
 ```bash
-export OPENROUTER_API_KEY=sk-or-...
+python scripts/save-key.py OPENROUTER_API_KEY --from-file ~/key.txt
 ```
+
+`save-key.py` writes into the `env` block of `~/.claude/settings.json`, merging
+rather than replacing and backing the old file up first. It reads the value from
+a file or from stdin, never from the command line, because a command line lands
+in shell history and in the transcript of whichever agent ran it. It never
+prints the value back, and it will not write to a project's
+`.claude/settings.json`, which is meant to be committed. Delete the file you
+pasted the key from afterwards. The full procedure is in
+[references/setup.md](references/setup.md).
 
 The key is not optional if you want the economy mode to do anything. The MCP
 server's `send-message` takes a string, so handing it a local file means reading
@@ -69,7 +78,7 @@ prints the exact command when a file is too large.
 Images need a fal.ai key from <https://fal.ai/dashboard/keys>:
 
 ```bash
-export FAL_AI_TOKEN=...
+python scripts/save-key.py FAL_AI_TOKEN --from-file ~/key.txt
 python scripts/gen-image.py "a pixel-art treasure chest icon" --out chest.png
 ```
 
@@ -98,7 +107,7 @@ optional extra. The free plan is 1000 pages a month with no card, and one page
 costs one credit, so an occasional fallback never leaves it:
 
 ```bash
-export FIRECRAWL_API_KEY=fc-...
+python scripts/save-key.py FIRECRAWL_API_KEY --from-file ~/key.txt
 python scripts/fetch-url.py https://example.com/docs --out docs.md
 ```
 
@@ -210,10 +219,13 @@ formats varies. `wav` and `mp3` are the safe ones. Re-encode with
 ```
 bass-boost/
 ├── SKILL.md              # the skill itself
+├── references/
+│   └── setup.md          # which key unlocks what, and where keys must not go
 ├── scripts/
 │   ├── or-send.py        # any local file to a cheap model, stdlib only
 │   ├── gen-image.py      # raster images, three price tiers, hard cost stop
-│   └── fetch-url.py      # one page as markdown, via Firecrawl
+│   ├── fetch-url.py      # one page as markdown, via Firecrawl
+│   └── save-key.py       # store a key in ~/.claude/settings.json safely
 ├── CHANGELOG.md
 └── LICENSE
 ```

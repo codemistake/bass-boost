@@ -4,7 +4,7 @@ description: "Use when a task needs something the coding agent cannot do by itse
 license: MIT
 compatibility: "Needs Python 3.9+, shell access, and an OpenRouter account reached via its MCP server or OPENROUTER_API_KEY. FAL_AI_TOKEN is required for images, FIRECRAWL_API_KEY for blocked pages, ffmpeg to trim oversized media. Economy mode assumes a token-metered host such as Claude Code."
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
   author: codemistake
   repository: https://github.com/codemistake/bass-boost
 ---
@@ -45,14 +45,23 @@ it. Delegating a local file needs `OPENROUTER_API_KEY` and
 `scripts/or-send.py`, which reads the file in a shell and returns only the
 answer.
 
-Ask the user to create a key at <https://openrouter.ai/keys> and export it. Two
-other keys each unlock one route: `FAL_AI_TOKEN` from
-<https://fal.ai/dashboard/keys> for images, and `FIRECRAWL_API_KEY` from
-<https://www.firecrawl.dev/app/api-keys> for pages the host's fetch tool cannot
-read. Never ask to see a key, and never write one into a file.
+Three keys each unlock their own routes: `OPENROUTER_API_KEY`, `FAL_AI_TOKEN`
+for images, and `FIRECRAWL_API_KEY` for pages the host cannot read. None is
+required to install the skill.
 
-When a route's key is missing, say the route is unavailable. Do not
-substitute a guess for what it would have returned.
+**Read [references/setup.md](references/setup.md) before handling any of them**,
+and follow it rather than improvising. The short version: keys live in the `env`
+block of `~/.claude/settings.json`, written by `scripts/save-key.py`, which
+reads the value from a file or stdin and never prints it. A project's
+`.claude/settings.json` is meant to be committed, so a key there is a key in the
+git history.
+
+Never ask to be shown a key, never echo one back, and never put one in a command
+line. Read it from its file inside the command that needs it.
+
+When a route's key is missing, say which route is unavailable and which variable
+would enable it, then do the rest of the task without it. Never substitute a
+guess for what that route would have returned.
 
 ## Modes
 

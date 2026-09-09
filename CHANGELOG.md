@@ -4,6 +4,22 @@ All notable changes to this skill are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-09-09
+
+### Added
+
+- `scripts/save-key.py` and `references/setup.md`, so the skill owns the
+  question of where a credential lives instead of saying "export it" and
+  leaving the user to guess. The Agent Skills specification has no field for
+  secrets, but Claude Code settings files take an `env` block, and the per-user
+  file is the right home for one.
+- The script reads a key from a file or stdin, never from the command line,
+  because a command line lands in shell history and in the transcript of
+  whichever agent ran it. It merges into existing settings, backs the old file
+  up, refuses a file it cannot parse, and never prints the value.
+- A refusal to write into a project's `.claude/settings.json`, which exists to
+  be committed and is the usual way a key reaches a git history.
+
 ## [1.2.0] - 2026-09-09
 
 ### Changed
