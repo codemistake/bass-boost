@@ -125,6 +125,27 @@ the bottom one, which is why the script stops before spending rather than
 trusting a prompt. And a 92 KB log costs four cents to delegate, which is why
 the skill tells the agent to narrow with `grep` before sending anything.
 
+## What has been verified
+
+Every mode below was run against the live API while the skill was written, not
+reasoned about. Two of them changed the skill when they failed.
+
+| Mode | Evidence |
+|---|---|
+| research | facts returned with source URLs; `:online` confirmed to search, not fetch |
+| image | all three tiers priced and the cheap one generated; the cost stop refused a $0.211 call |
+| audio | a 34 s speech sample transcribed verbatim for $0.0008 |
+| video | a 5 s clip described correctly for $0.0009 |
+| opinion | a frontier model from another lab returned three usable objections, two of which are now rules in this skill |
+| economy | two subagent runs; the first one refused to delegate and was right, which rewrote the rule |
+| fetch-url | retrieved a page that the host's own fetch tool answered with HTTP 403 |
+
+The economy run is worth repeating. Given a 1400-line log and told to save
+money, the agent ran one `grep` instead of delegating, and explained that a
+regex costs nothing while the delegation would have cost four cents and shipped
+the log to a third party. It was right, so the rule now says to narrow locally
+first.
+
 ## Cost and privacy
 
 Read this before installing.
