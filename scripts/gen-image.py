@@ -1,24 +1,19 @@
 #!/usr/bin/env python3
-"""Generate a raster image from a text prompt and save it to a file.
+"""Generate a raster image with GPT Image 2.5 on fal.ai and save it to a file.
 
-Standard library only. Two routes, chosen with --route:
-
-  draft    fal.ai z-image/turbo. Needs FAL_AI_TOKEN.
-           Under a second per image, a small fraction of a cent.
-           Use it for placeholders, layout stand-ins, and iterating on wording.
-
-  quality  OpenRouter's unified image endpoint. Needs OPENROUTER_API_KEY.
-           Slower and dearer. Use it once the prompt is settled and the image
-           ships. Default openai/gpt-image-2, which renders text correctly.
+Standard library only. Needs FAL_AI_TOKEN.
 
   python gen-image.py "a red vinyl record on white" --out cover.png
-  python gen-image.py "shop background, pixel art" --route quality --out bg.png
-  python gen-image.py "hero art" --route quality --model google/gemini-3.1-flash-image --out hero.png
+  python gen-image.py "hero art" --quality high --size 1920x1080 --out hero.png --yes
 
-Only the saved path reaches stdout. Timing and cost go to stderr.
+Quality is the price. At 1024x1024 a low image costs $0.006 and a high one
+costs $0.211, which is thirty-five times more for the same prompt. The default
+is low on purpose: iterate there, and step up once, at the end.
+
+A call that would cost more than --max-cost (default $0.01) refuses to run and
+prints the price. Re-run it with --yes only after the person paying has said so.
 """
 import argparse
-import base64
 import json
 import os
 import sys
@@ -26,91 +21,39 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-FAL_URL = "https://fal.run/fal-ai/z-image/turbo"
-# The unified image endpoint. Dedicated image models are rejected by
-# /chat/completions, and this one serves multimodal chat models too.
-OR_URL = "https://openrouter.ai/api/v1/images"
-OR_DEFAULT = "openai/gpt-image-2"
-# Named sizes accepted by the fal endpoint.
-FAL_SIZES = ["square", "square_hd", "portrait_4_3", "portrait_16_9",
-             "landscape_4_3", "landscape_16_9"]
+ENDPOINT = "https://fal.run/openai/gpt-image-2.5/{variant}/text-to-image"
+
+# Published fal prices, US dollars per image. Only these six resolutions are
+# priced, so only these are offered: a size we cannot price is a size we cannot
+# guard. `auto`, `xhigh` and `max` quality are unpriced and deliberately absent.
+PRICES = {
+    (1024, 768):  {"low": 0.005, "medium": 0.037, "high": 0.145},
+    (1024, 1024): {"low": 0.006, "medium": 0.053, "high": 0.211},
+    (1024, 1536): {"low": 0.005, "medium": 0.042, "high": 0.165},
+    (1920, 1080): {"low": 0.005, "medium": 0.040, "high": 0.158},
+    (2560, 1440): {"low": 0.007, "medium": 0.056, "high": 0.222},
+    (3840, 2160): {"low": 0.012, "medium": 0.101, "high": 0.401},
+}
+SIZES = {f"{w}x{h}": (w, h) for w, h in PRICES}
 
 
-def die(msg):
+def die(msg, code=1):
     print(msg, file=sys.stderr)
-    raise SystemExit(1)
+    raise SystemExit(code)
 
 
-def request(url, body, headers, timeout=300):
+def post(url, body, token):
     req = urllib.request.Request(
         url, data=json.dumps(body).encode(),
-        headers={"Content-Type": "application/json", **headers}, method="POST")
+        headers={"Authorization": f"Key {token}",
+                 "Content-Type": "application/json"}, method="POST")
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
+        with urllib.request.urlopen(req, timeout=600) as r:
             return json.loads(r.read())
     except urllib.error.HTTPError as e:
-        text = e.read().decode(errors="replace")[:1500]
-        if "<!DOCTYPE html>" in text:
-            die(f"HTTP {e.code}: blocked by a WAF. Too many calls from this IP. "
-                "Wait a few minutes rather than retrying in a loop.")
-        die(f"HTTP {e.code}: {text}")
+        die(f"HTTP {e.code}: {e.read().decode(errors='replace')[:1500]}")
     except urllib.error.URLError as e:
-        die(f"Network error reaching {url}: {e.reason}")
-
-
-def fetch(url, timeout=120):
-    try:
-        with urllib.request.urlopen(url, timeout=timeout) as r:
-            return r.read()
-    except urllib.error.URLError as e:
-        die(f"Could not download the generated image: {e.reason}")
-
-
-def route_draft(a):
-    token = os.environ.get("FAL_AI_TOKEN")
-    if not token:
-        die("FAL_AI_TOKEN is not set. Create a key at https://fal.ai/dashboard/keys "
-            "and export it.")
-    d = request(FAL_URL,
-                {"prompt": a.prompt, "image_size": a.size, "num_images": 1,
-                 **({"seed": a.seed} if a.seed is not None else {})},
-                {"Authorization": f"Key {token}"})
-    imgs = d.get("images") or []
-    if not imgs or not imgs[0].get("url"):
-        die("No image in the fal response: " + json.dumps(d)[:1000])
-    img = imgs[0]
-    data = fetch(img["url"])
-    t = d.get("timings", {}).get("inference")
-    note = f"{img.get('width')}x{img.get('height')} seed={d.get('seed')}"
-    if t:
-        note += f" inference={t:.2f}s"
-    return data, note
-
-
-def route_quality(a):
-    key = os.environ.get("OPENROUTER_API_KEY")
-    if not key:
-        die("OPENROUTER_API_KEY is not set. Create a key at "
-            "https://openrouter.ai/keys and export it.")
-    d = request(OR_URL,
-                {"model": a.model or OR_DEFAULT, "prompt": a.prompt},
-                {"Authorization": f"Bearer {key}",
-                 "HTTP-Referer": "https://github.com/codemistake/bass-boost",
-                 "X-Title": "bass-boost"})
-    try:
-        item = d["data"][0]
-    except (KeyError, IndexError):
-        die("No image in the OpenRouter response:\n" + json.dumps(d)[:1200])
-    if item.get("b64_json"):
-        data = base64.b64decode(item["b64_json"])
-    elif item.get("url"):
-        data = fetch(item["url"])
-    else:
-        die("The response carried no image data:\n" + json.dumps(item)[:600])
-    u = d.get("usage") or {}
-    note = " ".join(f"{k}={u[k]}" for k in ("prompt_tokens", "completion_tokens",
-                                            "cost") if k in u)
-    return data, (note or "ok")
+        die(f"Network error reaching fal: {e.reason}")
 
 
 def main():
@@ -119,14 +62,25 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("prompt")
     ap.add_argument("--out", required=True, help="path to write the image to")
-    ap.add_argument("--route", choices=["draft", "quality"], default="draft")
-    ap.add_argument("--model", help="quality route: override the model slug")
-    ap.add_argument("--size", default="square_hd", choices=FAL_SIZES,
-                    help="draft route only")
-    ap.add_argument("--seed", type=int, help="draft route only, for a reproducible image")
+    ap.add_argument("--quality", choices=["low", "medium", "high"], default="low")
+    ap.add_argument("--size", choices=sorted(SIZES), default="1024x1024")
+    ap.add_argument("--model", choices=["flare", "sunburst"], default="flare",
+                    help="flare is the fast general one; sunburst is tuned for "
+                         "precision. Same price.")
+    ap.add_argument("--background", choices=["auto", "transparent", "opaque"],
+                    default="auto", help="transparent suits icons and sprites")
+    ap.add_argument("--max-cost", type=float, default=0.01, dest="max_cost",
+                    help="refuse to spend more than this on one call")
+    ap.add_argument("--yes", action="store_true",
+                    help="confirm a call that costs more than --max-cost")
     for stream in (sys.stdout, sys.stderr):
         stream.reconfigure(encoding="utf-8")
     a = ap.parse_args()
+
+    token = os.environ.get("FAL_AI_TOKEN")
+    if not token:
+        die("FAL_AI_TOKEN is not set. Create a key at "
+            "https://fal.ai/dashboard/keys and export it.")
 
     out = Path(a.out)
     if out.exists():
@@ -134,12 +88,44 @@ def main():
     if out.parent and not out.parent.exists():
         die(f"No such directory: {out.parent}")
 
-    data, note = (route_draft if a.route == "draft" else route_quality)(a)
+    w, h = SIZES[a.size]
+    cost = PRICES[(w, h)][a.quality]
+    if cost > a.max_cost and not a.yes:
+        cheaper = ", ".join(
+            f"{q} ${PRICES[(w, h)][q]:.3f}"
+            for q in ("low", "medium", "high") if PRICES[(w, h)][q] <= a.max_cost)
+        die(f"This call costs ${cost:.3f} at {a.size} quality={a.quality}, over "
+            f"the ${a.max_cost:.3f} limit. It was NOT sent.\n"
+            f"Ask the person paying, then re-run with --yes.\n"
+            + (f"Within the limit at this size: {cheaper}."
+               if cheaper else "No quality at this size fits the limit."),
+            code=2)
+
+    d = post(ENDPOINT.format(variant=a.model),
+             {"prompt": a.prompt,
+              "image_size": {"width": w, "height": h},
+              "quality": a.quality,
+              "background": a.background,
+              "output_format": "png"},
+             token)
+
+    imgs = d.get("images") or []
+    if not imgs or not imgs[0].get("url"):
+        die("No image in the fal response: " + json.dumps(d)[:1000])
+    try:
+        with urllib.request.urlopen(imgs[0]["url"], timeout=180) as r:
+            data = r.read()
+    except urllib.error.URLError as e:
+        die(f"Could not download the generated image: {e.reason}")
     if not data.startswith(b"\x89PNG") and not data.startswith(b"\xff\xd8"):
         die(f"The response was not a PNG or JPEG ({len(data)} bytes). Not saved.")
+
     out.write_bytes(data)
     print(out)
-    print(f"[{a.route} {len(data)} bytes {note}]", file=sys.stderr)
+    # This endpoint omits width and height; fall back to what was asked for.
+    print(f"[{a.model} {a.quality} {imgs[0].get('width') or w}x"
+          f"{imgs[0].get('height') or h} {len(data)} bytes ${cost:.3f}]",
+          file=sys.stderr)
 
 
 if __name__ == "__main__":

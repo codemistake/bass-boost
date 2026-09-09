@@ -66,41 +66,32 @@ because the standard library cannot. Trimming an oversized recording or
 re-encoding an unsupported container needs `ffmpeg` on the machine. The script
 prints the exact command when a file is too large.
 
-For the cheap image route, export a fal.ai key from
-<https://fal.ai/dashboard/keys> as well:
+Images need a fal.ai key from <https://fal.ai/dashboard/keys>:
 
 ```bash
 export FAL_AI_TOKEN=...
+python scripts/gen-image.py "a pixel-art treasure chest icon" --out chest.png
 ```
 
-```bash
-python scripts/gen-image.py "a red vinyl record on white" --out cover.png
-python scripts/gen-image.py "shop background" --route quality --out bg.png
+One model, GPT Image 2.5, in three price tiers. Quality is the entire cost
+story: at 1024x1024 the same prompt costs $0.006 at low and $0.211 at high.
+The default is low, because low is good enough for placeholders, icons, and
+most shipped UI art.
+
+**A call over one cent refuses to run.** It prints the price, exits with status
+2, and sends nothing. That is a hard stop in the script, not a rule in a prompt,
+so an agent cannot talk itself past it:
+
+```
+$ python scripts/gen-image.py "hero art" --quality high --out hero.png
+This call costs $0.211 at 1024x1024 quality=high, over the $0.010 limit. It was NOT sent.
+Ask the person paying, then re-run with --yes.
+Within the limit at this size: low $0.006.
 ```
 
-`draft` is the default and runs on fal.ai: under a second, a small fraction of a
-cent, good enough to stop shipping grey boxes. `quality` runs on OpenRouter and
-defaults to GPT Image 2, which renders text inside an image correctly. Iterate
-on the draft route, spend on the last one.
-
-## What a call actually costs
-
-Measured on this skill's own routes, not quoted from a price list. Your figures
-will differ with size and length, but the ratios hold.
-
-| Route | Model | Input | Cost |
-|---|---|---|---|
-| image, draft | z-image/turbo | prompt | fraction of a cent, 0.83 s |
-| image, quality | gpt-image-2 | prompt | $0.005 to $0.007 |
-| image, quality | gemini-3.1-flash-image | prompt | $0.067 |
-| audio | parakeet-tdt-0.6b-v3 | 34 s of speech | $0.0008 |
-| video | gemini flash | 5 s clip, 2.8 MB | $0.0009 |
-| text | gemini flash | 92 KB log, 48,607 tokens | $0.038 |
-
-Two things to read off that table. The quality image route costs ten times more
-on one model than the other, so the default matters. And a 92 KB log costs four
-cents to delegate, which is why the skill tells the agent to narrow with `grep`
-before sending anything.
+Raise the ceiling with `--max-cost` or confirm one call with `--yes`. Only the
+six resolutions fal publishes prices for are offered, because a call that cannot
+be priced cannot be guarded.
 
 For pages your agent's own fetch tool cannot read, a Firecrawl key is the third
 optional extra. The free plan is 1000 pages a month with no card, and one page
@@ -114,6 +105,25 @@ python scripts/fetch-url.py https://example.com/docs --out docs.md
 Firecrawl requests from its own infrastructure and renders JavaScript, so a
 Cloudflare block or an IP rate-limit on your machine does not apply to it. Try
 the built-in tool first; this is the fallback, not the default.
+
+## What a call actually costs
+
+Measured on this skill's own routes, not quoted from a price list. Your figures
+will differ with size and length, but the ratios hold.
+
+| Route | Model | Input | Cost |
+|---|---|---|---|
+| image, low | gpt-image-2.5 | prompt, 1024x1024 | $0.006 |
+| image, medium | gpt-image-2.5 | prompt, 1024x1024 | $0.053 |
+| image, high | gpt-image-2.5 | prompt, 1024x1024 | $0.211 |
+| audio | parakeet-tdt-0.6b-v3 | 34 s of speech | $0.0008 |
+| video | gemini flash | 5 s clip, 2.8 MB | $0.0009 |
+| text | gemini flash | 92 KB log, 48,607 tokens | $0.038 |
+
+Two things to read off that table. The top image tier costs thirty-five times
+the bottom one, which is why the script stops before spending rather than
+trusting a prompt. And a 92 KB log costs four cents to delegate, which is why
+the skill tells the agent to narrow with `grep` before sending anything.
 
 ## Cost and privacy
 
@@ -145,9 +155,8 @@ often they come up:
    not take audio or video. A thirty-second screen recording of a bug is often
    the fastest bug report there is.
 3. **Hands for drawing.** A coding model writes the markup for a card and then
-   leaves a grey box where the picture goes. A draft image costs a fraction of
-   a cent and arrives in about a second, so the placeholder can be the real
-   thing from the first commit.
+   leaves a grey box where the picture goes. An icon costs about half a cent, so
+   the placeholder can be the real thing from the first commit.
 4. **A second set of blind spots.** Asking one model to check its own
    architecture proposal gets you the same reasoning twice. A model from another
    lab fails differently.
@@ -182,7 +191,7 @@ bass-boost/
 ├── SKILL.md              # the skill itself
 ├── scripts/
 │   ├── or-send.py        # any local file to a cheap model, stdlib only
-│   ├── gen-image.py      # raster images, draft or quality route
+│   ├── gen-image.py      # raster images, three price tiers, hard cost stop
 │   └── fetch-url.py      # one page as markdown, via Firecrawl
 ├── CHANGELOG.md
 └── LICENSE

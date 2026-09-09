@@ -4,6 +4,33 @@ All notable changes to this skill are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-09-09
+
+### Changed
+
+- The image mode is one model in three price tiers, `openai/gpt-image-2.5` on
+  fal.ai, replacing the two-route split across two providers. The z-image draft
+  route and the OpenRouter image route are gone; `FAL_AI_TOKEN` is now the only
+  key images need. GPT Image 2.5 is not sold through OpenRouter at all, and fal
+  is the only host that exposes the quality parameter, without which a route
+  called "quality" silently returns the cheapest tier.
+- Default quality is `low`. It measured good enough for icons and UI art at
+  $0.006 per 1024x1024 image, against $0.211 for the same prompt at high.
+
+### Added
+
+- A hard spending stop. A call priced above `--max-cost` (default $0.01) is not
+  sent: the script prints the price, names the tiers that do fit, and exits with
+  status 2. Overriding it takes `--yes` on the command line, so an agent cannot
+  reason its way past the limit the way it can past a sentence in a prompt.
+- `--model sunburst` for the precision-tuned variant at the same price, and
+  `--background transparent` for icons, which returns a real alpha channel.
+
+### Removed
+
+- `google/gemini-3.1-flash-image`. It measured about ten times the price of
+  GPT Image 2.5 at a comparable tier with no evidence of better output.
+
 ## [1.1.0] - 2026-09-09
 
 ### Added

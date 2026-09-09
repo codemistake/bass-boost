@@ -2,9 +2,9 @@
 name: bass-boost
 description: "Use when a task needs something the coding agent cannot do by itself and an outside model can: generate or replace a raster image, placeholder, icon, or texture; analyze a video or screen recording; transcribe audio or a voice note; research a page or topic the built-in web tools cannot reach; get an independent second opinion on a non-code decision; or move heavy reading onto a cheaper model when the user says their subscription limits are running low. Also use when the user asks which outside model to pick for a task, or what a call would cost."
 license: MIT
-compatibility: "Needs Python 3.9+, shell access, and an OpenRouter account reached via its MCP server or OPENROUTER_API_KEY. Optional: FAL_AI_TOKEN for cheap draft images, FIRECRAWL_API_KEY for blocked pages, ffmpeg to trim oversized media. Economy mode assumes a token-metered host such as Claude Code."
+compatibility: "Needs Python 3.9+, shell access, and an OpenRouter account reached via its MCP server or OPENROUTER_API_KEY. FAL_AI_TOKEN is required for images, FIRECRAWL_API_KEY for blocked pages, ffmpeg to trim oversized media. Economy mode assumes a token-metered host such as Claude Code."
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   author: codemistake
   repository: https://github.com/codemistake/bass-boost
 ---
@@ -46,10 +46,10 @@ it. Delegating a local file needs `OPENROUTER_API_KEY` and
 answer.
 
 Ask the user to create a key at <https://openrouter.ai/keys> and export it. Two
-other keys are optional and each unlocks one route: `FAL_AI_TOKEN` from
-<https://fal.ai/dashboard/keys> for cheap draft images, and `FIRECRAWL_API_KEY`
-from <https://www.firecrawl.dev/app/api-keys> for pages the host's fetch tool
-cannot read. Never ask to see a key, and never write one into a file.
+other keys each unlock one route: `FAL_AI_TOKEN` from
+<https://fal.ai/dashboard/keys> for images, and `FIRECRAWL_API_KEY` from
+<https://www.firecrawl.dev/app/api-keys> for pages the host's fetch tool cannot
+read. Never ask to see a key, and never write one into a file.
 
 When a route's key is missing, say the route is unavailable. Do not
 substitute a guess for what it would have returned.
@@ -148,33 +148,41 @@ own review tooling sees the actual diff and does better.
 ### image
 
 ```bash
-python scripts/gen-image.py "prompt" --out assets/icons/sword.png
-python scripts/gen-image.py "prompt" --route quality --out assets/hero.png
+python scripts/gen-image.py "prompt" --out assets/icons/chest.png
+python scripts/gen-image.py "prompt" --quality high --size 1920x1080 --out hero.png --yes
 ```
 
-Two routes, and the default is the cheap one on purpose.
+One model, GPT Image 2.5 on fal.ai, needing `FAL_AI_TOKEN`. Quality is the
+entire cost story: the same prompt at 1024x1024 costs a third of a cent at low
+and twenty-one cents at high.
 
-`draft` runs fal.ai z-image/turbo, needs `FAL_AI_TOKEN`, and returns in about a
-second for a small fraction of a cent. Placeholders, layout stand-ins, and
-figuring out what the prompt should say all belong here. Iterate on the draft
-route until the wording is right.
+| `--quality` | 1024x1024 | Reach for it when |
+|---|---|---|
+| low | $0.006 | the default. Placeholders, icons, iteration, most shipped UI art |
+| medium | $0.053 | low keeps missing one specific thing you can name |
+| high | $0.211 | the image is the product, and low has already been tried |
 
-`quality` runs OpenRouter's unified image endpoint and needs
-`OPENROUTER_API_KEY`. The default, `openai/gpt-image-2`, renders text inside an
-image correctly and is the cheaper of the two; `google/gemini-3.1-flash-image`
-costs roughly ten times as much per image, so reach for it only when the default
-has already failed on this prompt. Use the quality route once, at the end, on
-the prompt the draft route settled.
+Work at low. Step up once, at the end, on the prompt that low settled. Stepping
+up before the prompt is right buys a better rendering of the wrong idea.
 
-Dedicated image models are rejected by `/chat/completions`. Both go through
-`/api/v1/images`, which returns the picture as `data[0].b64_json`.
+**A call over $0.01 does not run.** The script prints the price, exits with
+status 2, and sends nothing. Show that price to the user and get an answer
+before re-running with `--yes`. Never pass `--yes` on your own judgement, and
+never raise `--max-cost` to get around the stop. The guard exists because
+thirty-five times the price is not a rounding error.
+
+Other flags: `--model sunburst` swaps the fast general variant for the
+precision-tuned one at the same price; `--background transparent` returns an
+alpha channel, though the prompt still has to ask for no backdrop or the model
+paints one anyway. Only six resolutions are offered, because those are the six
+fal publishes prices for, and an unpriced call is an unguarded one.
 
 Wire the result into the code and show it to the user. Never invent a filename
 that something already references, and never overwrite an existing asset without
 being asked: the script refuses to write over a file that exists.
 
-An image is not a decision. Getting a logo, a brand asset, or anything a person
-will read as authentic is the user's call, not a step to complete quietly.
+An image is not a decision. A logo, a brand asset, or anything a person will
+read as authentic is the user's call, not a step to complete quietly.
 
 ### economy
 
