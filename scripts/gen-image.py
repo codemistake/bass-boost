@@ -7,12 +7,13 @@ Standard library only. Two routes, chosen with --route:
            Under a second per image, a small fraction of a cent.
            Use it for placeholders, layout stand-ins, and iterating on wording.
 
-  quality  OpenRouter. Needs OPENROUTER_API_KEY. Slower and dearer.
-           Use it once the prompt is settled and the image ships.
+  quality  OpenRouter's unified image endpoint. Needs OPENROUTER_API_KEY.
+           Slower and dearer. Use it once the prompt is settled and the image
+           ships. Default openai/gpt-image-2, which renders text correctly.
 
   python gen-image.py "a red vinyl record on white" --out cover.png
   python gen-image.py "shop background, pixel art" --route quality --out bg.png
-  python gen-image.py "sword icon" --route quality --model openai/gpt-image-2 --out sword.png
+  python gen-image.py "hero art" --route quality --model google/gemini-3.1-flash-image --out hero.png
 
 Only the saved path reaches stdout. Timing and cost go to stderr.
 """
@@ -26,8 +27,10 @@ import urllib.request
 from pathlib import Path
 
 FAL_URL = "https://fal.run/fal-ai/z-image/turbo"
-OR_URL = "https://openrouter.ai/api/v1/chat/completions"
-OR_DEFAULT = "google/gemini-3.1-flash-image"  # Nano Banana 2
+# The unified image endpoint. Dedicated image models are rejected by
+# /chat/completions, and this one serves multimodal chat models too.
+OR_URL = "https://openrouter.ai/api/v1/images"
+OR_DEFAULT = "openai/gpt-image-2"
 # Named sizes accepted by the fal endpoint.
 FAL_SIZES = ["square", "square_hd", "portrait_4_3", "portrait_16_9",
              "landscape_4_3", "landscape_16_9"]
@@ -84,51 +87,26 @@ def route_draft(a):
     return data, note
 
 
-def _find_image(payload):
-    """OpenRouter returns images inside the assistant message. The exact key has
-    moved before, so look in the documented place and the known alternatives
-    rather than crashing on a rename."""
-    try:
-        msg = payload["choices"][0]["message"]
-    except (KeyError, IndexError):
-        return None
-    for entry in msg.get("images") or []:
-        if isinstance(entry, str):
-            return entry
-        url = (entry.get("image_url") or {}).get("url") if isinstance(entry, dict) else None
-        if url:
-            return url
-    content = msg.get("content")
-    if isinstance(content, list):
-        for part in content:
-            if isinstance(part, dict):
-                url = (part.get("image_url") or {}).get("url")
-                if url:
-                    return url
-    return None
-
-
 def route_quality(a):
     key = os.environ.get("OPENROUTER_API_KEY")
     if not key:
         die("OPENROUTER_API_KEY is not set. Create a key at "
             "https://openrouter.ai/keys and export it.")
     d = request(OR_URL,
-                {"model": a.model or OR_DEFAULT,
-                 "modalities": ["image", "text"],
-                 "messages": [{"role": "user", "content": a.prompt}]},
+                {"model": a.model or OR_DEFAULT, "prompt": a.prompt},
                 {"Authorization": f"Bearer {key}",
                  "HTTP-Referer": "https://github.com/codemistake/bass-boost",
                  "X-Title": "bass-boost"})
-    url = _find_image(d)
-    if not url:
-        die("No image in the OpenRouter response. Check that the model outputs "
-            "images and that the response shape has not changed:\n"
-            + json.dumps(d)[:1200])
-    if url.startswith("data:"):
-        data = base64.b64decode(url.split(",", 1)[1])
+    try:
+        item = d["data"][0]
+    except (KeyError, IndexError):
+        die("No image in the OpenRouter response:\n" + json.dumps(d)[:1200])
+    if item.get("b64_json"):
+        data = base64.b64decode(item["b64_json"])
+    elif item.get("url"):
+        data = fetch(item["url"])
     else:
-        data = fetch(url)
+        die("The response carried no image data:\n" + json.dumps(item)[:600])
     u = d.get("usage") or {}
     note = " ".join(f"{k}={u[k]}" for k in ("prompt_tokens", "completion_tokens",
                                             "cost") if k in u)

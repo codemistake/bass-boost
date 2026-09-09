@@ -19,6 +19,17 @@ All notable changes to this skill are documented here. The format follows
   occasional fallback costs nothing. Optional; the skill states a page is
   unreachable rather than guessing when the key is absent.
 
+### Fixed
+
+- The quality image route posted to `/chat/completions` with a `modalities`
+  field. Dedicated image models reject that endpoint outright, and models whose
+  only output is an image reject the `["image","text"]` pair. Both now go
+  through `/api/v1/images`, which returns `data[0].b64_json`. The three-place
+  response search this required is deleted.
+- The quality default is now `openai/gpt-image-2`. It renders text inside an
+  image correctly and measured about ten times cheaper per image than
+  `google/gemini-3.1-flash-image`, which was the previous default.
+
 ### Changed
 
 - Reframed from "delegate heavy work" to "capabilities the coding agent lacks".

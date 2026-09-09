@@ -78,10 +78,29 @@ python scripts/gen-image.py "a red vinyl record on white" --out cover.png
 python scripts/gen-image.py "shop background" --route quality --out bg.png
 ```
 
-`draft` is the default and runs on fal.ai: about a second, a small fraction of a
-cent, good enough to stop shipping grey boxes. `quality` runs on OpenRouter,
-defaulting to Nano Banana 2, with GPT Image 2 available for images whose text
-has to render correctly. Iterate on the draft route, spend on the last one.
+`draft` is the default and runs on fal.ai: under a second, a small fraction of a
+cent, good enough to stop shipping grey boxes. `quality` runs on OpenRouter and
+defaults to GPT Image 2, which renders text inside an image correctly. Iterate
+on the draft route, spend on the last one.
+
+## What a call actually costs
+
+Measured on this skill's own routes, not quoted from a price list. Your figures
+will differ with size and length, but the ratios hold.
+
+| Route | Model | Input | Cost |
+|---|---|---|---|
+| image, draft | z-image/turbo | prompt | fraction of a cent, 0.83 s |
+| image, quality | gpt-image-2 | prompt | $0.005 to $0.007 |
+| image, quality | gemini-3.1-flash-image | prompt | $0.067 |
+| audio | parakeet-tdt-0.6b-v3 | 34 s of speech | $0.0008 |
+| video | gemini flash | 5 s clip, 2.8 MB | $0.0009 |
+| text | gemini flash | 92 KB log, 48,607 tokens | $0.038 |
+
+Two things to read off that table. The quality image route costs ten times more
+on one model than the other, so the default matters. And a 92 KB log costs four
+cents to delegate, which is why the skill tells the agent to narrow with `grep`
+before sending anything.
 
 For pages your agent's own fetch tool cannot read, a Firecrawl key is the third
 optional extra. The free plan is 1000 pages a month with no card, and one page

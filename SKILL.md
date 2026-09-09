@@ -123,6 +123,10 @@ The endpoint returns one flat string. There are no timestamps and no speaker
 labels, so a recording with several speakers comes back as a single run of text.
 Reading the task out of it is the main model's job.
 
+A transcript is not a quotation. Names, technical terms, and anything said
+quickly come back wrong often enough that acting on an exact word is a mistake;
+confirm the parts that matter before treating them as literal.
+
 ### opinion
 
 `send-message` with a frontier model from a **different lab** than the main
@@ -155,11 +159,15 @@ second for a small fraction of a cent. Placeholders, layout stand-ins, and
 figuring out what the prompt should say all belong here. Iterate on the draft
 route until the wording is right.
 
-`quality` runs OpenRouter and needs `OPENROUTER_API_KEY`. The default is
-`google/gemini-3.1-flash-image`, and `openai/gpt-image-2` is the alternative
-when text inside the image has to render correctly. Ask the user which one, or
-say which you picked and why. Use it once, at the end, on the prompt the draft
-route settled.
+`quality` runs OpenRouter's unified image endpoint and needs
+`OPENROUTER_API_KEY`. The default, `openai/gpt-image-2`, renders text inside an
+image correctly and is the cheaper of the two; `google/gemini-3.1-flash-image`
+costs roughly ten times as much per image, so reach for it only when the default
+has already failed on this prompt. Use the quality route once, at the end, on
+the prompt the draft route settled.
+
+Dedicated image models are rejected by `/chat/completions`. Both go through
+`/api/v1/images`, which returns the picture as `data[0].b64_json`.
 
 Wire the result into the code and show it to the user. Never invent a filename
 that something already references, and never overwrite an existing asset without
