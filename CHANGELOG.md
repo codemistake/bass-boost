@@ -6,6 +6,15 @@ All notable changes to this skill are documented here. The format follows
 
 ## [1.3.0] - 2026-09-09
 
+### Fixed
+
+- All three route scripts told the user to "export it" when a key was missing,
+  which contradicted the new setup flow and does not persist on Windows at all.
+  They now print the exact `save-key.py` line and say not to paste a key into a
+  command line or a chat message.
+- `references/setup.md` assumed Claude Code's settings file exists. It now
+  covers hosts that do not read it, with the persisting form for each shell.
+
 ### Added
 
 - `scripts/save-key.py` and `references/setup.md`, so the skill owns the

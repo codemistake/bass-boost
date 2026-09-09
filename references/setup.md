@@ -47,6 +47,14 @@ python scripts/save-key.py FAL_AI_TOKEN --stdin      # paste, then Ctrl-D
 
 Then delete the file the key was pasted from.
 
+`save-key.py` writes to Claude Code's settings file. On a host that does not
+read that file, put the variable wherever that host keeps environment variables
+for its sessions, and give the person the exact line for their shell: `export
+NAME=...` in `~/.zshrc` or `~/.bashrc` on macOS and Linux, or
+`[Environment]::SetEnvironmentVariable('NAME', $value, 'User')` in PowerShell on
+Windows, which persists where a plain `export` does not. Read the value from a
+file in that line too, rather than typing it out.
+
 ## Where the key must never go
 
 - **`.claude/settings.json` inside a project.** That file exists to be committed

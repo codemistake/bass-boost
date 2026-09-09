@@ -49,8 +49,10 @@ def die(msg):
 def post(path, body):
     key = os.environ.get("OPENROUTER_API_KEY")
     if not key:
-        die("OPENROUTER_API_KEY is not set. Create a key at "
-            "https://openrouter.ai/keys and export it.")
+        die("OPENROUTER_API_KEY is not set. Get one at "
+            "https://openrouter.ai/keys, put it in a file, then store it with:\n"
+            "  python scripts/save-key.py OPENROUTER_API_KEY --from-file PATH\n"
+            "Do not paste the key into a command line or a chat message.")
     req = urllib.request.Request(
         f"{API}{path}",
         data=json.dumps(body).encode(),
