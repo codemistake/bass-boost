@@ -80,9 +80,10 @@ def main():
     token = os.environ.get("FAL_AI_TOKEN")
     if not token:
         die("FAL_AI_TOKEN is not set. Get one at "
-            "https://fal.ai/dashboard/keys, put it in a file, then store it with:\n"
+            "https://fal.ai/dashboard/keys. Ask for it in a file, take the path,\n"
+            "and store it yourself. Do not hand this command to the user:\n"
             "  python scripts/save-key.py FAL_AI_TOKEN --from-file PATH\n"
-            "Do not paste the key into a command line or a chat message.")
+            "A key must never reach a command line or a chat message.")
 
     out = Path(a.out)
     if out.exists():

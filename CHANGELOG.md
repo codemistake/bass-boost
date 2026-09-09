@@ -8,6 +8,11 @@ All notable changes to this skill are documented here. The format follows
 
 ### Fixed
 
+- The setup flow handed the user a command to run. It now asks for one thing, a
+  file path, and the agent runs the script itself. Somebody who has to copy a
+  command out of a chat window and paste it into a terminal has been given a
+  chore, not an installation.
+
 - All three route scripts told the user to "export it" when a key was missing,
   which contradicted the new setup flow and does not persist on Windows at all.
   They now print the exact `save-key.py` line and say not to paste a key into a

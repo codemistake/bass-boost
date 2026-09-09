@@ -49,15 +49,24 @@ Three keys each unlock their own routes: `OPENROUTER_API_KEY`, `FAL_AI_TOKEN`
 for images, and `FIRECRAWL_API_KEY` for pages the host cannot read. None is
 required to install the skill.
 
-**Read [references/setup.md](references/setup.md) before handling any of them**,
-and follow it rather than improvising. The short version: keys live in the `env`
-block of `~/.claude/settings.json`, written by `scripts/save-key.py`, which
-reads the value from a file or stdin and never prints it. A project's
-`.claude/settings.json` is meant to be committed, so a key there is a key in the
-git history.
+When one is missing, ask for exactly one thing: **"save the key to a file
+anywhere and tell me the path."** Then run the script yourself:
+
+```bash
+python scripts/save-key.py OPENROUTER_API_KEY --from-file "<the path they gave>"
+```
+
+Then tell them to delete that file. Do not hand the person a command to run;
+they gave you a path so that you would do the work.
+
+**Read [references/setup.md](references/setup.md) before handling any key.** The
+short version: they live in the `env` block of `~/.claude/settings.json`, and a
+project's `.claude/settings.json` is meant to be committed, so a key there is a
+key in the git history.
 
 Never ask to be shown a key, never echo one back, and never put one in a command
-line. Read it from its file inside the command that needs it.
+line. `save-key.py` reads from the file so the value never appears as an
+argument.
 
 When a route's key is missing, say which route is unavailable and which variable
 would enable it, then do the rest of the task without it. Never substitute a

@@ -41,6 +41,9 @@ claude mcp login openrouter
 To delegate anything held in a local file, also add an API key from
 <https://openrouter.ai/keys>:
 
+You do not have to run anything. Save the key to a file, tell your agent the
+path, and it stores the key for you with the bundled script:
+
 ```bash
 python scripts/save-key.py OPENROUTER_API_KEY --from-file ~/key.txt
 ```

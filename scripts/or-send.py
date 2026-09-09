@@ -50,9 +50,10 @@ def post(path, body):
     key = os.environ.get("OPENROUTER_API_KEY")
     if not key:
         die("OPENROUTER_API_KEY is not set. Get one at "
-            "https://openrouter.ai/keys, put it in a file, then store it with:\n"
+            "https://openrouter.ai/keys. Ask for it in a file, take the path,\n"
+            "and store it yourself. Do not hand this command to the user:\n"
             "  python scripts/save-key.py OPENROUTER_API_KEY --from-file PATH\n"
-            "Do not paste the key into a command line or a chat message.")
+            "A key must never reach a command line or a chat message.")
     req = urllib.request.Request(
         f"{API}{path}",
         data=json.dumps(body).encode(),

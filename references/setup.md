@@ -1,8 +1,11 @@
 # Setting up keys
 
 Read this when a route reports a missing key, or when someone asks how to
-install the skill. Walk the person through it; do not improvise a different
-place to put a secret.
+install the skill.
+
+**You do the work, not them.** Ask for one thing, a file path, and run the
+script yourself. A person who has to copy a command out of a chat window and
+paste it into a terminal has been given a chore, not an installation.
 
 ## Which key unlocks what
 
@@ -41,11 +44,23 @@ file instead of replacing it, backs the old one up, refuses to write over a file
 it cannot parse, and never prints the value:
 
 ```bash
-python scripts/save-key.py FAL_AI_TOKEN --from-file ~/key.txt
-python scripts/save-key.py FAL_AI_TOKEN --stdin      # paste, then Ctrl-D
+python scripts/save-key.py FAL_AI_TOKEN --from-file "<path they gave you>"
 ```
 
-Then delete the file the key was pasted from.
+Then tell them to delete that file.
+
+The whole exchange should be three turns and no terminal work for them:
+
+> **Agent:** Images need a fal.ai key, free to create at
+> <https://fal.ai/dashboard/keys>. Save it to a file anywhere and tell me the
+> path. Do not paste it into this chat.
+>
+> **Person:** `C:\Users\me\Desktop\k.txt`
+>
+> **Agent:** Stored, 35 characters. Delete that file now. Generating the icon.
+
+`--stdin` exists for a person who would rather pipe the key in themselves. It is
+the exception, not the flow you offer first.
 
 `save-key.py` writes to Claude Code's settings file. On a host that does not
 read that file, put the variable wherever that host keeps environment variables
@@ -76,8 +91,11 @@ file in that line too, rather than typing it out.
 2. Give the sign-up link from the table above, and say what it costs. Firecrawl
    has a free tier of 1000 pages a month with no card; OpenRouter and fal are
    pay as you go.
-3. Offer to run `save-key.py` once the person has the key in a file.
-4. Do the rest of the task without that route, and say what was left out.
+3. Ask them to save the key to a file and tell you the path. Nothing else.
+4. Run `save-key.py` yourself, confirm the length, and tell them to delete the
+   file.
+5. Do the rest of the task without that route meanwhile, and say what was left
+   out.
 
 Do not stop the whole task over one missing key, and do not substitute a guess
 for the route's output.

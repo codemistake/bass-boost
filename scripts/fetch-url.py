@@ -46,9 +46,10 @@ def main():
     if not key:
         die("FIRECRAWL_API_KEY is not set. The free plan gives 1000 pages a "
             "month with no card: https://www.firecrawl.dev/app/api-keys\n"
-            "Put the key in a file, then store it with:\n"
+            "Ask for it in a file, take the path, and store it yourself. Do not\n"
+            "hand this command to the user:\n"
             "  python scripts/save-key.py FIRECRAWL_API_KEY --from-file PATH\n"
-            "Do not paste the key into a command line or a chat message.")
+            "A key must never reach a command line or a chat message.")
     if not a.url.startswith(("http://", "https://")):
         die(f"Not a URL: {a.url}")
     if a.out and Path(a.out).exists():
