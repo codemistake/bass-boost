@@ -153,8 +153,8 @@ python scripts/gen-image.py "prompt" --quality high --size 1920x1080 --out hero.
 ```
 
 One model, GPT Image 2.5 on fal.ai, needing `FAL_AI_TOKEN`. Quality is the
-entire cost story: the same prompt at 1024x1024 costs a third of a cent at low
-and twenty-one cents at high.
+entire cost story: at 1024x1024 the same prompt costs $0.006 at low and $0.211
+at high, thirty-five times more.
 
 | `--quality` | 1024x1024 | Reach for it when |
 |---|---|---|
