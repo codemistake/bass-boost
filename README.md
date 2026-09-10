@@ -38,18 +38,20 @@ npx -y skills@latest add codemistake/bass-boost --global --agent claude-code
 Or copy this directory to `~/.claude/skills/bass-boost/`, or to
 `~/.agents/skills/bass-boost/` on a runtime that reads that path.
 
-Then connect OpenRouter:
+Then connect OpenRouter. On Claude Code:
 
 ```bash
 claude mcp add --transport http openrouter https://mcp.openrouter.ai/mcp
 claude mcp login openrouter
 ```
 
-To delegate anything held in a local file, also add an API key from
-<https://openrouter.ai/keys>:
+On another runtime, add `https://mcp.openrouter.ai/mcp` as an HTTP MCP server
+however that runtime does it.
 
-You do not have to run anything. Save the key to a file, tell your agent the
-path, and it stores the key for you with the bundled script:
+Anything held in a local file also needs an API key from
+<https://openrouter.ai/keys>. You do not have to run anything for this: save the
+key to a file, tell your agent the path, and it stores the key for you with the
+bundled script.
 
 ```bash
 python scripts/save-key.py OPENROUTER_API_KEY --from-file ~/key.txt
