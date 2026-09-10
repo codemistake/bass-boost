@@ -23,13 +23,20 @@ watts, and every decision stays on the tweeter.
 Nothing here writes to your repository. The outside model reads, the main model
 decides and edits.
 
+Built and tested on Claude Code, and not affiliated with or endorsed by
+Anthropic. The four scripts are plain Python with no dependencies and no
+knowledge of the host, so the skill works anywhere the Agent Skills format is
+read. Two things are Claude Code shaped and documented with alternatives: where
+keys are stored, and the command that connects an MCP server.
+
 ## Install
 
 ```bash
 npx -y skills@latest add codemistake/bass-boost --global --agent claude-code
 ```
 
-Or copy this directory to `~/.claude/skills/bass-boost/`.
+Or copy this directory to `~/.claude/skills/bass-boost/`, or to
+`~/.agents/skills/bass-boost/` on a runtime that reads that path.
 
 Then connect OpenRouter:
 

@@ -20,6 +20,14 @@ All notable changes to this skill are documented here. The format follows
 - `references/setup.md` assumed Claude Code's settings file exists. It now
   covers hosts that do not read it, with the persisting form for each shell.
 
+### Changed
+
+- Host-specific instructions now name their host and give the general form
+  alongside. The skill carries no Anthropic trademark in its name: Anthropic's
+  terms require written permission to use their marks in connection with another
+  product, so the tie to Claude Code lives in the description and the README,
+  where referring to it is ordinary referential use.
+
 ### Added
 
 - `scripts/save-key.py` and `references/setup.md`, so the skill owns the

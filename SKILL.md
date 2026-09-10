@@ -27,15 +27,17 @@ expensive one.
 
 ## Setup
 
-Preferred, no key handling:
+On a host that speaks MCP, connecting OpenRouter's server avoids handling a key
+at all. In Claude Code that is:
 
 ```bash
 claude mcp add --transport http openrouter https://mcp.openrouter.ai/mcp
 claude mcp login openrouter
 ```
 
-That gives the tools `send-message`, `transcribe-audio`, `list-models`,
-`get-model`, and `get-generation`.
+Elsewhere, add `https://mcp.openrouter.ai/mcp` as an HTTP MCP server however
+that host does it. Either way it gives the tools `send-message`,
+`transcribe-audio`, `list-models`, `get-model`, and `get-generation`.
 
 **The MCP server alone cannot relieve context.** Its `send-message` takes a
 string, so putting a local file in the request means reading that file first.
@@ -224,7 +226,8 @@ Also while it is on:
 
 - Long first drafts, such as a README or a report, are drafted outside and
   edited by the main model.
-- Subagents stay off. They bill the same subscription that is running out.
+- Subagents stay off, on a host that has them. They bill the same subscription
+  that is running out.
 - The main model keeps edits, commands, short reads, decisions, and the final
   check.
 
