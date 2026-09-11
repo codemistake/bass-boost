@@ -4,7 +4,7 @@ description: "Use when a task needs something the coding agent cannot do by itse
 license: MIT
 compatibility: "Needs Python 3.9+, shell access, and an OpenRouter account reached via its MCP server or OPENROUTER_API_KEY. FAL_AI_TOKEN is required for images, FIRECRAWL_API_KEY for blocked pages, ffmpeg to trim oversized media. Economy mode assumes a token-metered host such as Claude Code."
 metadata:
-  version: "1.3.0"
+  version: "1.4.0"
   author: codemistake
   repository: https://github.com/codemistake/bass-boost
 ---
@@ -150,9 +150,27 @@ confirm the parts that matter before treating them as literal.
 ### opinion
 
 `send-message` with a frontier model from a **different lab** than the main
-model, `max_tokens: 3000`. The value is a different training run with different
-blind spots, not a higher benchmark score, so picking the cheapest capable
-outsider beats picking the most expensive one.
+model. The value is a different training run with different blind spots, not a
+higher benchmark score, so a Claude host asking Claude, or a GPT host asking
+GPT, buys nothing. Read the main model's name from the host's own system prompt
+and pick the row that is not its lab:
+
+| Main model is from | Everyday call | Hard question |
+|---|---|---|
+| Anthropic | `~openai/gpt-latest` | `openai/gpt-6-astra` |
+| OpenAI | `~anthropic/claude-sonnet-latest` | `~anthropic/claude-fable-latest` |
+| anyone else | either everyday model | either hard-question model |
+
+The everyday tier costs about $2/$10 per million tokens in either direction and
+covers most architecture, product, and wording calls: `max_tokens: 3000`. The
+hard-question tier costs about $10/$50, so name the price before sending, and
+reach for it only when the everyday answer came back shallow or the decision is
+expensive to reverse. Both hard-question models reason before answering and
+count that reasoning inside `max_tokens`, so set `reasoning_effort: high` (not
+`max`) and `max_tokens: 8000`, then read `get-generation` once to see how much
+went to reasoning and trim the limit for the next call. GPT-6 Astra has no
+`~openai/...-latest` alias as of 2026-09-11, so its slug is pinned here; confirm
+it with `get-model` before relying on it.
 
 Send a brief, not a repository: context in five to fifteen lines, the options,
 and the question. Ask it to argue against the plan and to name what would have
@@ -162,8 +180,8 @@ An outside model is not independent evidence. Two models trained on overlapping
 data repeat each other's mistakes, so agreement proves nothing. What comes back
 is a list of things to check, and the checking still happens locally.
 
-Use it for architecture, product, and wording calls. For code review, the host's
-own review tooling sees the actual diff and does better.
+For code review, the host's own review tooling sees the actual diff and does
+better.
 
 ### image
 

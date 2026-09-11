@@ -4,6 +4,23 @@ All notable changes to this skill are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-09-11
+
+### Changed
+
+- The opinion mode said "a frontier model from a different lab" and left the
+  choice to the agent, which is how a Claude host ends up asking Claude. It now
+  carries a table keyed on the main model's lab, with an everyday tier
+  (`~openai/gpt-latest` or `~anthropic/claude-sonnet-latest`, about $2/$10 per
+  million tokens) and a hard-question tier (`openai/gpt-6-astra` or
+  `~anthropic/claude-fable-latest`, about $10/$50). The agent reads its own
+  model name from the host's system prompt and takes the row that is not its
+  lab.
+- The hard-question models reason before answering and bill that reasoning
+  inside `max_tokens`, so the mode now says `reasoning_effort: high` and
+  `max_tokens: 8000`, with one `get-generation` read afterwards to trim the
+  limit from a measured number rather than a guess.
+
 ## [1.3.0] - 2026-09-09
 
 ### Fixed
